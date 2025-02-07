@@ -4,37 +4,34 @@
  */
 package controlador;
 
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import javax.swing.JOptionPane;
-import javax.swing.table.DefaultTableModel;
+import modelo.Libro_Modelo;
+import java.sql.*;
+import java.util.ArrayList;
+import java.util.List;
 
-/**
- *
- * @author ruby
- */
 public class Libro_Controlador {
-    public static DefaultTableModel obtenerLibrosPorCedula(String cedula) {
-        DefaultTableModel model = new DefaultTableModel(new String[]{"ID Libro", "Cédula Autor"}, 0);
-        
-        try (Connection conn = DriverManager.getConnection("jdbc:mysql://localhost:3306/tu_base", "usuario", "contraseña");
-             PreparedStatement ps = conn.prepareStatement("CALL ObtenerLibrosPorAutor(?)")) {
-            
+
+    public List<Libro_Modelo> obtenerLibrosPorCedula(String cedula) {
+        List<Libro_Modelo> listaLibros = new ArrayList<>();
+        String sql = "CALL ObtenerLibrosPorAutor(?)";
+
+        try (Connection conn = new ConexionBDD().conectar(); 
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
             ps.setString(1, cedula);
             ResultSet rs = ps.executeQuery();
-            
-            while (rs.next()) {
-                model.addRow(new Object[]{rs.getInt("idLibro"), rs.getString("cedula")});
-            }
-        } catch (SQLException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(null, "Error al consultar", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-        
-        return model;
-    }
-}  
 
+            while (rs.next()) {
+                listaLibros.add(new Libro_Modelo(
+                    rs.getInt("idLibro"),
+                    rs.getString("titulo"),
+                    rs.getString("cedula")
+                ));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return listaLibros;
+    }
+}
